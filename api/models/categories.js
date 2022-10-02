@@ -14,7 +14,7 @@ const getCategoryById = async (id) => {
 
 const updateCategory = async (id, updatedCategory) => {
     const data = await session.run(
-        `Match (c:Category {_id: '${id}'}) SET t.name = '${updatedCategory.name}' return c`
+        `Match (c:Category {_id: '${id}'}) SET c.name = '${updatedCategory.name}' return c`
     );
     return data.records.map((z) => z.get("c").properties);
 };

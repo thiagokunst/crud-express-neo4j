@@ -2,8 +2,16 @@ const nanoid = require("nanoid");
 const { session } = require("./connection");
 
 const getAllTasks = async () => {
-    const data = await session.run(`Match (t:Task) return t`);
-    return data.records.map((z) => z.get("t").properties);
+    const data = await session.run(`Match (t:Task) optional match (t)--(c:Category) return *`);
+    let tasks = []
+    data.records.map((z) => {
+        let taskInfo = {
+            task: z.get("t").properties,
+            category: z.get("c") ? z.get("c").properties : {}
+        }
+        tasks.push(taskInfo);
+    })
+    return tasks;
 };
 
 const getTaskById = async (id) => {
@@ -47,22 +55,6 @@ const deleteTaskById = async (id) => {
     const data = await session.run(`Match (t:Task {_id: '${id}'}) delete t`);
     await getAllTasks();
 };
-
-// try {
-//   const result = await session.run("CREATE (a:Person {name: $name}) RETURN a", {
-//     name: personName,
-//   });
-
-//   const singleRecord = result.records[0];
-//   const node = singleRecord.get(0);
-
-//   console.log(node.properties.name);
-// } finally {
-//   await session.close();
-// }
-
-// // on application exit:
-// await driver.close();
 
 module.exports = {
     getAllTasks,
