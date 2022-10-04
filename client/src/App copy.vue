@@ -1,139 +1,95 @@
 <template>
     <v-app>
         <v-main>
-            <v-container fluid>
-                <v-card>
-                    <v-tabs
-                        v-model="tab"
-                        background-color="cyan"
-                        centered
-                        dark
-                        icons-and-text
-                    >
-                        <v-tabs-slider></v-tabs-slider>
+            <v-card class="mx-auto my-10" max-width="600" tile>
+                <v-toolbar color="blue darken-4" dark>
+                    <v-toolbar-title class="headline">Todo App</v-toolbar-title>
 
-                        <v-tab href="#tab-1">
-                            Tasks
-                        </v-tab>
+                    <v-spacer></v-spacer>
+                    <v-tooltip bottom>
+                        <template v-slot:activator="{ on }">
+                            <v-btn icon @click="dialog.status = true" v-on="on">
+                                <v-icon></v-icon>
+                            </v-btn>
+                        </template>
+                        <span>
+                            New Category
+                        </span>
+                    </v-tooltip>
+                </v-toolbar>
+                <v-list two-line subheader>
+                    <v-subheader class="headline">{{ date }}</v-subheader>
+                    <p class="mx-12 text-right"><b></b> Tasks</p>
 
-                        <v-tab href="#tab-2">
-                            Categories
-                        </v-tab>
-                    </v-tabs>
-
-                    <v-tabs-items v-model="tab">
-                        <v-tab-item :key="1" :value="'tab-' + 1">
-                            <v-card flat>
-                                <v-card-text>
-                                    <v-card-title>
+                    <v-list-item>
+                        <v-list-item-content>
+                            <v-list-item-title>
+                                <v-row>
+                                    <v-col cols="10">
+                                        <v-text-field
+                                            v-model="newTask"
+                                            label="Type your task"
+                                            @keyup.enter="insertNewTask"
+                                        />
+                                    </v-col>
+                                    <v-col cols="2">
                                         <v-btn
-                                            color="cyan"
-                                            class="white--text"
-                                            @click="
-                                                task_tab.new_task.dialog = true
+                                            :disabled="
+                                                !newTask || loadingTaskButton
                                             "
-                                            >New</v-btn
-                                        ></v-card-title
-                                    >
-                                    <v-data-table
-                                        :items="task_tab.tasks"
-                                        :headers="task_tab.headers"
-                                    >
-                                        <template
-                                            v-slot:item.actions="{ item }"
+                                            :loading="loadingTaskButton"
+                                            >ba</v-btn
                                         >
-                                            <v-icon
-                                                small
-                                                class="mr-2"
-                                                @click="editTaskTable(item)"
-                                            >
-                                                mdi-pencil
-                                            </v-icon>
-                                            <v-icon
-                                                small
-                                                @click="deleteTaskTable(item)"
-                                            >
-                                                mdi-delete
-                                            </v-icon>
-                                        </template>
-                                    </v-data-table>
-                                </v-card-text>
-                            </v-card>
-                        </v-tab-item>
-                        <v-tab-item :key="2" :value="'tab-' + 2">
-                            <v-card flat>
-                                <v-card-text>categories</v-card-text>
-                            </v-card>
-                        </v-tab-item>
-                    </v-tabs-items>
-                </v-card>
-            </v-container>
+                                    </v-col>
+                                </v-row>
+                            </v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list>
+                <v-list>
+                    <v-list-item v-for="(task, index) in tasks" :key="index">
+                        <v-list-item-content>
+                            <v-list-item-title>
+                                {{ task.task.name }}
+                            </v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+                </v-list>
+            </v-card>
 
-            <v-dialog v-model="task_tab.new_task.dialog">
+            <v-dialog v-model="dialog.status" width="500">
                 <v-card>
-                    <v-card-title class="text-h5 cyan white--text">
-                        Privacy Policy
+                    <v-card-title class="text-h5 blue darken-4 white--text">
+                        New Category
                     </v-card-title>
 
-                    <v-card-text>
-                        <v-row>
-                            <v-col>
-                                <v-text-field
-                                    v-model="task_tab.new_task.name"
-                                    label="Insert your task"
-                                    @keyup.enter="insertNewTask"
-                                >
-                                </v-text-field>
-                            </v-col>
-                        </v-row>
+                    <v-card-text class="mt-4">
+                        <v-text-field
+                            v-model="dialog.newCategory"
+                            label="Type your category"
+                            @keyup.enter="insertNewCategory"
+                        >
+                        </v-text-field>
                     </v-card-text>
+
+                    <v-data-table :items="categories" :headers="dialog.headers">
+                        
+                    </v-data-table>
 
                     <v-divider></v-divider>
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="primary" text @click="insertNewTask">
-                            SAVE
-                        </v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-
-            <v-dialog v-model="task_tab.edit_task.dialog">
-                <v-card>
-                    <v-card-title class="text-h5 cyan white--text">
-                        Privacy Policy
-                    </v-card-title>
-
-                    <v-card-text>
-                        <v-row class="mt-4">
-                            <v-col cols="8">
-                                <v-text-field
-                                    v-model="task_tab.edit_task.name"
-                                    label="Insert your task"
-                                    @keyup.enter="insertNewTask"
-                                >
-                                </v-text-field>
-                            </v-col>
-                            <v-col cols="4">
-                                <v-select
-                                    v-model="task_tab.edit_task.category"
-                                    label="Select your category"
-                                    :items="category_tab.categories"
-                                    item-text="name"
-                                    item-value="_id"
-                                >
-                                </v-select>
-                            </v-col>
-                        </v-row>
-                    </v-card-text>
-
-                    <v-divider></v-divider>
-
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="primary" text @click="insertNewTask">
-                            SAVE
+                        <v-btn
+                            color="primary"
+                            text
+                            @click="dialog.status = false"
+                            :disabled="
+                                !dialog.newCategory || dialog.loadingButton
+                            "
+                            :loading="dialog.loadingButton"
+                        >
+                            Save
                         </v-btn>
                     </v-card-actions>
                 </v-card>
@@ -165,29 +121,25 @@ export default {
             color: "",
             timeout: 3000,
         },
-        task_tab: {
-            tasks: [],
+        date: "",
+        newTask: "",
+        loadingTaskButton: false,
+        tasks: [],
+        categories: [],
+        editTask: "",
+        editCategory: "",
+        taskId: "",
+        categoryId: "",
+        dialog: {
+            status: false,
+            newCategory: "",
+            saveButton: false,
+            loadingButton: false,
             headers: [
-                { text: "Name", value: "task.name" },
-                { text: "Category", value: "category.name" },
+                { text: "Name", value: "name" },
                 { text: "Actions", value: "actions" },
             ],
-            new_task: {
-                dialog: false,
-                name: "",
-            },
-            edit_task: {
-                dialog: false,
-                name: "",
-                id: "",
-                category: "",
-            },
         },
-        category_tab: {
-            categories: [],
-        },
-        date: "",
-        tab: null,
     }),
 
     methods: {
@@ -207,7 +159,7 @@ export default {
             axios
                 .get("/tasks")
                 .then((r) => {
-                    this.task_tab.tasks = r.data;
+                    this.tasks = r.data;
                     this.__showSnackBar("Tasks loaded", "success");
                 })
                 .catch((e) => {
@@ -296,7 +248,7 @@ export default {
                 .get("/categories")
                 .then((r) => {
                     console.log(r.data);
-                    this.category_tab.categories = r.data;
+                    this.categories = r.data;
                     this.__showSnackBar("Categories loaded", "success");
                 })
                 .catch((e) => {
@@ -357,16 +309,6 @@ export default {
                         "error"
                     );
                 });
-        },
-
-        editTaskTable(item) {
-          this.task_tab.edit_task.dialog = true;
-          this.task_tab.edit_task.name = item.task.name;
-          this.task_tab.edit_task.id = item.task._id;
-            console.log(item);
-        },
-        deleteTaskTable(item) {
-            console.log(item);
         },
         onChange() {
             console.log("mudou");
