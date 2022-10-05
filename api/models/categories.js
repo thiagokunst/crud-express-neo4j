@@ -37,7 +37,7 @@ const insertCategory = async (Category) => {
 
 const deleteCategoryById = async (id) => {
     const session = driver.session();
-    const data = await session.run(`Match (c:Category {_id: '${id}'}) delete c`);
+    const data = await session.run(`Match (c:Category {_id: '${id}'}) detach delete c`);
      session.close();
     await getAllCategories();
 };

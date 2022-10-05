@@ -1,8 +1,10 @@
 <template>
     <v-app>
         <v-main>
-            <v-container fluid>
-                <v-card>
+            <v-container >
+                <v-row>
+                                <v-col cols="12" class="d-flex align-center justify-center">
+                <v-card max-width="800px">
                     <v-tabs
                         v-model="tab"
                         background-color="cyan"
@@ -23,7 +25,7 @@
 
                     <v-tabs-items v-model="tab">
                         <v-tab-item :key="1" :value="'tab-' + 1">
-                            <v-card flat>
+                            <v-card flat max-width="800px">
                                 <v-card-text>
                                     <v-card-title>
                                         <v-btn
@@ -182,9 +184,12 @@
                         </v-tab-item>
                     </v-tabs-items>
                 </v-card>
+                </v-col>
+                </v-row>
+
             </v-container>
 
-            <v-dialog v-model="task_tab.new_task.dialog">
+            <v-dialog v-model="task_tab.new_task.dialog" max-width="400px">
                 <v-card>
                     <v-card-title class="text-h5 cyan white--text">
                         New Task
@@ -250,7 +255,7 @@
                 </v-card>
             </v-dialog>
 
-            <v-dialog v-model="category_tab.new_category.dialog">
+            <v-dialog v-model="category_tab.new_category.dialog" max-width="400px">
                 <v-card>
                     <v-card-title class="text-h5 cyan white--text">
                         New Category
@@ -377,7 +382,7 @@ export default {
             categories: [],
             headers: [
                 { text: "Name", value: "name" },
-                { text: "Actions", value: "actions" },
+                { text: "Actions", value: "actions", align: "center" },
             ],
             edit_category: {
                 categoryId: "",
@@ -434,6 +439,8 @@ export default {
                         this.__showSnackBar("Task inserted", "success");
                         this.getTasks();
                         this.task_tab.new_task.loading = false;
+                        this.task_tab.new_task.dialog = false;
+
                     })
                     .catch((e) => {
                         this.__showSnackBar(
@@ -541,6 +548,8 @@ export default {
                         this.category_tab.new_category.loading = false;
 
                         this.__showSnackBar("Category inserted", "success");
+                        this.category_tab.new_category.name = "";
+
                         this.category_tab.new_category.dialog = false;
                         this.getCategories();
                     })
@@ -582,6 +591,7 @@ export default {
                 .then((r) => {
                     
                     this.getCategories();
+                    this.getTasks();
                     this.category_tab.delete_category.dialog = false;
                     this.__showSnackBar("Category deleted", "success");
                 })
