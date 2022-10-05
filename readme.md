@@ -128,5 +128,7 @@ A Simple Todo list app using Express, Vue and Neo4j
 
 #### Notes
 
-The main difficulty of this project was trying to understand how Neo4j works. Manipulating relationships and avoiding duplicate nodes was quite challenging.
-The UX needs improvement mostly because of how I needed to isolate interactions due to my lack of understanding of complex cypher queries.
+The main difficulty of this project was trying to understand how Neo4j works. Manipulating relationships and avoiding duplicate nodes was quite challenging.\
+The UX needs improvement mostly because of how I needed to isolate interactions due to my lack of understanding of complex cypher queries.\
+Overall it was a good experience and I liked Neo4j very much.
+I'm sure I'll use it in future projects. 😃
