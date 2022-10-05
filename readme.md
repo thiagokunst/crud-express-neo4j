@@ -18,6 +18,7 @@ A Simple Todo list app using Express, Vue and Neo4j
     DB_PASSWORD='admin'
 
     ```
+    Replace values if needed.
 4. Still inside 'api' folder, install dependencies and start
 
     ```
