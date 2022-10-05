@@ -44,7 +44,11 @@
                                                 :return-value.sync="
                                                     props.item.task.name
                                                 "
-                                                @save="updateTask"
+                                                @save="
+                                                    updateTask(
+                                                        props.item.task.name
+                                                    )
+                                                "
                                                 @cancel="cancel"
                                                 @open="open(props)"
                                                 @close="close"
@@ -116,7 +120,64 @@
                         </v-tab-item>
                         <v-tab-item :key="2" :value="'tab-' + 2">
                             <v-card flat>
-                                <v-card-text>categories</v-card-text>
+                                <v-card-text>
+                                    <v-card-title>
+                                        <v-btn
+                                            color="cyan"
+                                            class="white--text"
+                                            @click="
+                                                category_tab.new_category.dialog = true
+                                            "
+                                            >New</v-btn
+                                        ></v-card-title
+                                    >
+                                    <v-data-table
+                                        :items="category_tab.categories"
+                                        :headers="category_tab.headers"
+                                    >
+                                        <template v-slot:item.name="props">
+                                            <v-edit-dialog
+                                                :return-value.sync="
+                                                    props.item.name
+                                                "
+                                                @save="
+                                                    updateCategory(
+                                                        props.item.name
+                                                    )
+                                                "
+                                                @cancel="cancel"
+                                                @open="openCategoryTab(props)"
+                                                @close="closeCategoryTab"
+                                            >
+                                                {{ props.item.name }}
+                                                <template v-slot:input>
+                                                    <v-text-field
+                                                        v-model="
+                                                            props.item.name
+                                                        "
+                                                        label="Edit"
+                                                        single-line
+                                                        hint="Press enter to save"
+                                                        counter
+                                                    ></v-text-field>
+                                                </template>
+                                            </v-edit-dialog>
+                                        </template>
+
+                                        <template
+                                            v-slot:item.actions="{ item }"
+                                        >
+                                            <v-icon
+                                                small
+                                                @click="
+                                                    deleteCategoryTable(item)
+                                                "
+                                            >
+                                                mdi-delete
+                                            </v-icon>
+                                        </template>
+                                    </v-data-table>
+                                </v-card-text>
                             </v-card>
                         </v-tab-item>
                     </v-tabs-items>
@@ -126,7 +187,7 @@
             <v-dialog v-model="task_tab.new_task.dialog">
                 <v-card>
                     <v-card-title class="text-h5 cyan white--text">
-                        Privacy Policy
+                        New Task
                     </v-card-title>
 
                     <v-card-text>
@@ -176,7 +237,81 @@
                             @click="task_tab.delete_task.dialog = false"
                             >Cancel</v-btn
                         >
-                        <v-btn color="blue darken-1" text @click="deleteTask()" :loading="task_tab.delete_task.loading" :disabled="task_tab.delete_task.loading"
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="deleteTask()"
+                            :loading="task_tab.delete_task.loading"
+                            :disabled="task_tab.delete_task.loading"
+                            >OK</v-btn
+                        >
+                        <v-spacer></v-spacer>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <v-dialog v-model="category_tab.new_category.dialog">
+                <v-card>
+                    <v-card-title class="text-h5 cyan white--text">
+                        New Category
+                    </v-card-title>
+
+                    <v-card-text>
+                        <v-row>
+                            <v-col>
+                                <v-text-field
+                                    v-model="category_tab.new_category.name"
+                                    label="Insert your category"
+                                    @keyup.enter="insertNewCategory"
+                                >
+                                </v-text-field>
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+
+                    <v-divider></v-divider>
+
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                            color="primary"
+                            text
+                            @click="insertNewCategory"
+                            :disabled="
+                                category_tab.new_category.disabled ||
+                                    category_tab.new_category.loading
+                            "
+                            :loading="category_tab.new_category.loading"
+                        >
+                            SAVE
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <v-dialog
+                v-model="category_tab.delete_category.dialog"
+                max-width="500px"
+            >
+                <v-card>
+                    <v-card-title class="text-h5"
+                        >Are you sure you want to delete this
+                        item?</v-card-title
+                    >
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="category_tab.delete_category.dialog = false"
+                            >Cancel</v-btn
+                        >
+                        <v-btn
+                            color="blue darken-1"
+                            text
+                            @click="deleteCategory()"
+                            :loading="category_tab.delete_category.loading"
+                            :disabled="category_tab.delete_category.loading"
                             >OK</v-btn
                         >
                         <v-spacer></v-spacer>
@@ -240,6 +375,23 @@ export default {
         },
         category_tab: {
             categories: [],
+            headers: [
+                { text: "Name", value: "name" },
+                { text: "Actions", value: "actions" },
+            ],
+            edit_category: {
+                categoryId: "",
+            },
+            delete_category: {
+                dialog: false,
+                categoryId: "",
+                loading: false,
+            },
+            new_category: {
+                dialog: false,
+                name: "",
+                loading: false,
+            },
         },
         date: "",
         tab: null,
@@ -293,13 +445,13 @@ export default {
             }
         },
 
-        async updateTask() {
+        async updateTask(name) {
             axios
                 .patch("/tasks/" + this.task_tab.edit_task.id, {
-                    name: this.task_tab.edit_task.name,
+                    name: name,
                 })
                 .then((r) => {
-                    console.log(r.data);
+                  
                     this.__showSnackBar("Task updated", "success");
                 })
                 .catch((e) => {
@@ -314,11 +466,6 @@ export default {
                     categoryId: categoryId,
                 })
                 .then((r) => {
-                    console.log({
-                        taskid: this.task_tab.edit_category.taskId,
-                        categoryid: this.task_tab.edit_category.categoryId,
-                    });
-                    console.log(r.data);
                     this.getTasks();
                     this.getCategories();
                     this.__showSnackBar("Task updated", "success");
@@ -335,7 +482,7 @@ export default {
                     categoryId: this.categoryId,
                 })
                 .then((r) => {
-                    console.log(r.data);
+                 
                     this.__showSnackBar("Task updated", "success");
                 })
                 .catch((e) => {
@@ -350,7 +497,7 @@ export default {
                 .then((r) => {
                     this.task_tab.delete_task.loading = false;
 
-                    console.log(r.data);
+                
                     this.getTasks();
                     this.task_tab.delete_task.dialog = false;
                     this.__showSnackBar("Task deleted", "success");
@@ -366,7 +513,7 @@ export default {
             axios
                 .get("/categories")
                 .then((r) => {
-                    console.log(r.data);
+              
                     this.category_tab.categories = r.data;
                     this.__showSnackBar("Categories loaded", "success");
                 })
@@ -379,20 +526,28 @@ export default {
         },
 
         async insertNewCategory() {
-            if (this.dialog.newCategory === "") {
+            if (this.category_tab.new_category.name === "") {
                 this.__showSnackBar(
                     "You can't add an empty category",
                     "warning"
                 );
             } else {
+                this.category_tab.new_category.loading = true;
                 axios
-                    .post("/categories", { name: this.dialog.newCategory })
+                    .post("/categories", {
+                        name: this.category_tab.new_category.name,
+                    })
                     .then((r) => {
+                        this.category_tab.new_category.loading = false;
+
                         this.__showSnackBar("Category inserted", "success");
-                        this.dialog.status = false;
+                        this.category_tab.new_category.dialog = false;
                         this.getCategories();
                     })
                     .catch((e) => {
+                      
+                        this.category_tab.new_category.loading = false;
+
                         this.__showSnackBar(
                             "Error while inserting new category",
                             "error"
@@ -401,13 +556,16 @@ export default {
             }
         },
 
-        async updateCategory() {
+        async updateCategory(name) {
             axios
-                .put("/categories/tasks/" + this.categoryId, {
-                    name: this.editCategory,
-                })
+                .put(
+                    "/categories/" + this.category_tab.edit_category.categoryId,
+                    {
+                        name: name,
+                    }
+                )
                 .then((r) => {
-                    console.log(r.data);
+                    
                     this.__showSnackBar("Task updated", "success");
                 })
                 .catch((e) => {
@@ -417,12 +575,18 @@ export default {
 
         async deleteCategory() {
             axios
-                .delete("/categories/" + this.categoryId)
+                .delete(
+                    "/categories/" +
+                        this.category_tab.delete_category.categoryId
+                )
                 .then((r) => {
-                    console.log(r.data);
+                    
+                    this.getCategories();
+                    this.category_tab.delete_category.dialog = false;
                     this.__showSnackBar("Category deleted", "success");
                 })
                 .catch((e) => {
+                    this.category_tab.delete_category.dialog = false;
                     this.__showSnackBar(
                         "Error while deleting category",
                         "error"
@@ -434,14 +598,14 @@ export default {
             this.task_tab.edit_task.dialog = true;
             this.task_tab.edit_task.name = item.task.name;
             this.task_tab.edit_task.id = item.task._id;
-            console.log(item);
+    
         },
         deleteTaskTable(item) {
             this.task_tab.delete_task.dialog = true;
             this.task_tab.delete_task.taskId = item.task._id;
         },
         onChange() {
-            console.log("mudou");
+       
         },
 
         editCategory() {},
@@ -450,8 +614,6 @@ export default {
             this.__showSnackBar("Canceled", "warning");
         },
         open(item) {
-            console.log(item);
-            this.task_tab.edit_task.name = item.item.task.name;
             this.task_tab.edit_task.id = item.item.task._id;
         },
         openCategory(item) {
@@ -460,6 +622,21 @@ export default {
         close() {
             console.log("Dialog closed");
         },
+
+        openCategoryTab(item) {
+            this.category_tab.edit_category.categoryId = item.item._id;
+        },
+
+        closeCategoryTab() {
+             console.log("Dialog closed");
+        },
+
+        deleteCategoryTable(item) {
+            this.category_tab.delete_category.dialog = true;
+            this.category_tab.delete_category.categoryId = item._id;
+        },
+
+        cancelCategoryTab() {},
     },
 
     created() {
