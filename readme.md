@@ -8,7 +8,7 @@ A Simple Todo list app using Express, Vue and Neo4j
 ## How
 ### STEP 1: Installation
 
-1. Install node and neo4j on you machine. (Node v10.24.1, npm 6.14.12)
+1. Install node and neo4j on your machine. (Node v10.24.1, npm 6.14.12)
 2. Be sure neo4j is up and running.
 3. Get the code from [github](https://github.com/thiagokunst/crud-express-neo4j)
 4. Go to the project folder and navigate to the 'api' folder, create a .env file following the example below:
